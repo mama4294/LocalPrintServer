@@ -1,47 +1,53 @@
 require("dotenv").config();
 const express = require("express");
 const rateLimit = require("express-rate-limit");
-const helmet = require("helmet");
-const { printLabel } = require("./print");
+const { exec } = require("child_process");
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(helmet());
+// Middleware
 app.use(express.json());
-app.use(rateLimit({ windowMs: 60_000, max: 30 })); //30 requests per minute max
 
-app.get("/", (req, res) => {
-  res.send("Server is running!");
+const limiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  message: "Too many requests from this IP, please try again later.",
 });
+app.use(limiter);
 
+// Route
 app.post("/print", (req, res) => {
-  const data = req.body;
-  const now = new Date();
-  console.log(`[${now.toISOString()}] Received print request:`, data);
+  const now = new Date().toISOString();
+  console.log(`[${now}] Received request:`, req.body);
 
-  //TODO: add error handling to ensure the data is in the correct format
-
-  try {
-    printLabel(data); // Call your printer logic
-    res.status(200).send("Print job sent!");
-  } catch (err) {
-    console.error("Error printing:", err);
-    res.status(500).send("Failed to print");
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).json({ error: "No data provided" });
   }
+
+  const printerIP = "10.145.0.50";
+  const port = 9100;
+  const labelsJson = JSON.stringify(req.body);
+
+  // Build PowerShell command
+  const psCommand = `powershell -ExecutionPolicy Bypass -File "./print-labels.ps1" -printerIP "${printerIP}" -port ${port} -labelsJson '${labelsJson}'`;
+
+  exec(psCommand, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`❌ Print error: ${error.message}`);
+      return res
+        .status(500)
+        .json({ error: "Failed to print label", details: error.message });
+    }
+    if (stderr) {
+      console.error(`⚠️ Print stderr: ${stderr}`);
+    }
+    console.log(`✅ Print stdout:\n${stdout}`);
+    res.json({ message: "Label sent to printer", output: stdout });
+  });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is listening on http://localhost:${PORT}`);
-});
-
-// Error handling
-process.on("uncaughtException", (err) => {
-  console.error("Uncaught Exception:", err);
-});
-process.on("unhandledRejection", (reason, promise) => {
-  console.error("Unhandled Rejection:", reason);
-});
-process.on("SIGINT", () => {
-  console.log("Shutting down gracefully...");
-  process.exit(0);
+// Start server
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server listening on http://localhost:${PORT}`);
 });
