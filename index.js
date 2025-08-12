@@ -6,6 +6,20 @@ const { exec } = require("child_process");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+//Example:
+//POST to http://<server-ip>:3000/print
+// Body should be a JSON array of label objects
+// Example body:
+// [
+//   {
+//     "title": "Fermentation Sample",
+//     "id": "25-HTS-25-F-12hr",
+//     "description": "12hr",
+//     "location": "Sample Port"
+//   }
+// ]
+
+
 // Middleware
 app.use(express.json());
 
@@ -27,10 +41,10 @@ app.post("/print", (req, res) => {
 
   const printerIP = "10.145.0.50";
   const port = 9100;
-  const labelsJson = JSON.stringify(req.body);
+    const labelsJson = JSON.stringify(req.body);
 
-  // Build PowerShell command
-  const psCommand = `powershell -ExecutionPolicy Bypass -File "./print-labels.ps1" -printerIP "${printerIP}" -port ${port} -labelsJson '${labelsJson}'`;
+    // Build PowerShell command with valid JSON and escaped double quotes
+    const psCommand = `powershell -ExecutionPolicy Bypass -File \"./printMultipleLables.ps1\" -printerIP \"${printerIP}\" -port ${port} -labelsJson \"${labelsJson.replace(/"/g, '\\"')}\"`;
 
   exec(psCommand, (error, stdout, stderr) => {
     if (error) {

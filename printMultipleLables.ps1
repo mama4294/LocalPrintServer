@@ -4,36 +4,14 @@ param(
     [string]$labelsJson
 )
 
+
 Write-Host "Labels: $labelsJson`n"
-
-# Step 1: Normalize line breaks
-$normalized = $labelsJson -replace "`r`n", '' -replace "`n", '' -replace "`r", ''
-
-# Step 2: Split into individual pseudo-JSON strings
-$rawObjects = ($normalized -split '}\s*{') | ForEach-Object {
-    $obj = $_
-    if ($obj -notmatch '^{') { $obj = '{' + $obj }
-    if ($obj -notmatch '}$') { $obj = $obj + '}' }
-
-    # Replace single quotes with double quotes
-    $obj = $obj -replace "'", '"'
-
-    # Ensure field values are properly quoted (only if needed)
-    $obj = $obj -replace '("id": )([^",}]+)', '$1"$2"' `
-                 -replace '("description": )([^",}]+)', '$1"$2"' `
-                 -replace '("location": )([^",}]+)', '$1"$2"' `
-                 -replace '("title": )([^",}]+)', '$1"$2"' `
-                 -replace '("footer": )([^"}]+)', '$1"$2"'
-
-    try {
-        $parsed = $obj | ConvertFrom-Json
-        $parsed
-    } catch {
-        Write-Host "⚠️ Failed to parse object:`n$obj`n"
-    }
+try {
+    $labels = $labelsJson | ConvertFrom-Json
+} catch {
+    Write-Host "⚠️ Failed to parse labelsJson:`n$labelsJson`n"
+    exit
 }
-
-$labels = $rawObjects | Where-Object { $_ -ne $null }
 
 Write-Host "Parsed $($labels.Count) label(s).`n"
 
