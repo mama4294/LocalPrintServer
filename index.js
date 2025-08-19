@@ -39,7 +39,7 @@ app.post("/print", (req, res) => {
     return res.status(400).json({ error: "No data provided" });
   }
 
-  const printerIP = "10.145.0.50";
+  const printerIP = "10.145.9.125";
   const port = 9100;
     const labelsJson = JSON.stringify(req.body);
 
