@@ -36,7 +36,7 @@ app.post("/print", (req, res) => {
   console.log(`[${now}] Received request:`, req.body);
 
   if (!req.body || Object.keys(req.body).length === 0) {
-    return res.status(400).json({ error: true, message: "No data provided" });
+    return res.status(400).json({ status: "failure", message: "No data provided" });
   }
 
   const printerIP = "10.145.9.125";
@@ -48,23 +48,21 @@ app.post("/print", (req, res) => {
 
   exec(psCommand, (error, stdout, stderr) => {
     if (error) {
-      console.error(`❌ Print error: ${error.message}`);
+      console.error(`❌ Print error: ${error.stderr}`);
       return res
         .status(500)
-        .json({ error: true, 
-                message: error.message });
+        .json({ status: "failure", 
+                message: `Print error: ${stderr}` });
     }
-    if (stderr) {
-      console.error(`⚠️ Print stderr: ${stderr}`);
-    }
+
     // Extract number of labels printed from PowerShell stdout
-    console.log(`✅ Print stdout:\n${stdout}`);
     let numPrinted = null;
     const match = stdout.match(/Parsed (\d+) label/);
     if (match) {
       numPrinted = parseInt(match[1], 10);
     }
-    res.json({ error: false, message: numPrinted==1 ? "1 Label printed": `${numPrinted} Labels printed`});
+    res.json({ status: "success", message: numPrinted==1 ? "1 Label printed": `${numPrinted} Labels printed`});
+    console.log(`✅ Printed:\n${numPrinted} labels`);
   });
 });
 

@@ -9,14 +9,14 @@ Write-Host "Labels: $labelsJson`n"
 try {
     $labels = $labelsJson | ConvertFrom-Json
 } catch {
-    Write-Host "⚠️ Failed to parse labelsJson:`n$labelsJson`n"
+    Write-Error "⚠️ Failed to parse labelsJson:`n$labelsJson`n"
     exit 1
 }
 
 Write-Host "Parsed $($labels.Count) label(s).`n"
 
 if ($labels.Count -eq 0) {
-    Write-Host "No labels parsed. Exiting."
+    Write-Error "No labels parsed. Exiting."
     exit 1
 }
 
@@ -40,7 +40,7 @@ try {
     $tcpClient.Connect($printerIP, $port)
     Write-Host "✅ Connected to printer at ip: $printerIP, port: $port"
 } catch {
-    Write-Host "❌ Failed to connect to printer: $_"
+    Write-Error "❌ Failed to connect to printer: $_"
     exit 1
 }
 
@@ -92,7 +92,7 @@ $cutCode
         $streamWriter.Flush()
         Write-Host "✅ Sent label for ID: $id"
     } catch {
-    Write-Host "❌ Failed to send label for $id $_"
+    Write-Error "❌ Failed to send label for $id $_"
     exit 1
     }
 }
