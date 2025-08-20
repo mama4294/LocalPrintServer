@@ -51,13 +51,19 @@ app.post("/print", (req, res) => {
       console.error(`❌ Print error: ${error.message}`);
       return res
         .status(500)
-        .json({ error: "Failed to print label", details: error.message });
+        .json({ error: "Failed to print label", details: error.message, output: stdout, stderr });
     }
     if (stderr) {
       console.error(`⚠️ Print stderr: ${stderr}`);
     }
+    // Extract number of labels printed from PowerShell stdout
     console.log(`✅ Print stdout:\n${stdout}`);
-    res.json({ message: "Label sent to printer", output: stdout });
+    let numPrinted = null;
+    const match = stdout.match(/Parsed (\d+) label/);
+    if (match) {
+      numPrinted = parseInt(match[1], 10);
+    }
+    res.json({ message: "Label(s) printed", numPrinted, output: stdout });
   });
 });
 
