@@ -111,7 +111,7 @@ function printLabelsFromGridV3(selectedControl) {
         // Auto-hide after 3 seconds
         setTimeout(function () {
             Xrm.App.clearGlobalNotification(id);
-        }, 3000);
+        }, 5000);
         });
 
 
@@ -141,7 +141,7 @@ function printLabelsFromGridV3(selectedControl) {
         // Auto-hide after 3 seconds
         setTimeout(function () {
             Xrm.App.clearGlobalNotification(id);
-        }, 3000);
+        }, 5000);
         });
     })
     .catch(error => {
@@ -149,7 +149,7 @@ function printLabelsFromGridV3(selectedControl) {
         var errorNotification = {
             type: 2,
             level: 2, // error
-            message: "Failed to print labels. " + error.message,
+            message: error.message,
             showCloseButton: true
         };
         Xrm.App.addGlobalNotification(errorNotification);
