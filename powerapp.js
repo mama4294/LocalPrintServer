@@ -102,11 +102,18 @@ function printLabelsFromGridV3(selectedControl) {
     // Notify that printing has started
     var initNotification = {
         type: 2,
-        level: 1, // info
+        level: 4, // info
         message: "🖨️ Sending labels to printer...",
         showCloseButton: true
     };
-    Xrm.App.addGlobalNotification(initNotification);
+    Xrm.App.addGlobalNotification(initNotification)
+        .then(function (id) {
+        // Auto-hide after 3 seconds
+        setTimeout(function () {
+            Xrm.App.clearGlobalNotification(id);
+        }, 3000);
+        });
+
 
     fetch(flowUrl, {
         method: "POST",
@@ -118,7 +125,7 @@ function printLabelsFromGridV3(selectedControl) {
     .then(response => {
         if (!response.ok) {
             console.log("Flow call failed with status: " + response.status + " - " + response.ok);
-            throw new Error("Flow call failed: " + response.status);
+            throw new Error("Failed to print labels: " + response.status);
         }
         return response.json();
     })
@@ -127,17 +134,22 @@ function printLabelsFromGridV3(selectedControl) {
         var successNotification = {
             type: 2,
             level: data.status === "success" ? 1 : 2, // info if success, error if failure
-            message: data.message || (data.status === "success" ? "✅ Labels printed successfully." : "❌ Flow reported failure."),
+            message: data.message || (data.status === "success" ? "Labels printed successfully." : "Failed to print labels."),
             showCloseButton: true
         };
-        Xrm.App.addGlobalNotification(successNotification);
+        Xrm.App.addGlobalNotification(successNotification).then(function (id) {
+        // Auto-hide after 3 seconds
+        setTimeout(function () {
+            Xrm.App.clearGlobalNotification(id);
+        }, 3000);
+        });
     })
     .catch(error => {
         console.error("Error triggering flow:", error);
         var errorNotification = {
             type: 2,
             level: 2, // error
-            message: "❌ Failed to trigger flow. " + error.message,
+            message: "Failed to print labels. " + error.message,
             showCloseButton: true
         };
         Xrm.App.addGlobalNotification(errorNotification);

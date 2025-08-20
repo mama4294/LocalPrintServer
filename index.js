@@ -36,7 +36,7 @@ app.post("/print", (req, res) => {
   console.log(`[${now}] Received request:`, req.body);
 
   if (!req.body || Object.keys(req.body).length === 0) {
-    return res.status(400).json({ error: "No data provided" });
+    return res.status(400).json({ error: true, message: "No data provided" });
   }
 
   const printerIP = "10.145.9.125";
@@ -51,7 +51,8 @@ app.post("/print", (req, res) => {
       console.error(`❌ Print error: ${error.message}`);
       return res
         .status(500)
-        .json({ error: "Failed to print label", details: error.message, output: stdout, stderr });
+        .json({ error: true, 
+                message: error.message });
     }
     if (stderr) {
       console.error(`⚠️ Print stderr: ${stderr}`);
@@ -63,7 +64,7 @@ app.post("/print", (req, res) => {
     if (match) {
       numPrinted = parseInt(match[1], 10);
     }
-    res.json({ message: "Label(s) printed", numPrinted, output: stdout });
+    res.json({ error: false, message: numPrinted==1 ? "1 Label printed": `${numPrinted} Labels printed`});
   });
 });
 
